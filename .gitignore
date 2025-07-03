@@ -1,4 +1,4 @@
-trained_models/*
+trained_models/*.pkl
 venv
 data/raw/*.csv
 data/processed/*.csv
