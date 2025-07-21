@@ -5,9 +5,9 @@ import datetime
 
 def train_all_models(X_train, y_train, verbose=True):
     models = {
-        "xgboost": model_xgboost.get_model(),
-        "lightgbm": model_lightgbm.get_model(),
-        "randomforest": model_randomforest.get_model()
+        "xgboost": model_xgboost.get_model(y_train),
+        "lightgbm": model_lightgbm.get_model(y_train),
+        "randomforest": model_randomforest.get_model(y_train)
     }
     train_times = {}
     for name, model in models.items():

@@ -3,3 +3,9 @@ scikit-learn
 xgboost
 lightgbm
 pyyaml
+imblearn
+inquirer
+streamlit
+plotly
+openpyxl
+xlrd
