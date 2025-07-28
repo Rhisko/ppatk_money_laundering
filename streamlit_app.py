@@ -370,8 +370,10 @@ def create_network_visualization(G, entity_stats):
     # Create figure
     fig = go.Figure(data=[edge_trace, node_trace],
                     layout=go.Layout(
-                        title='AML Network Analysis - Entity Relationships',
-                        titlefont_size=16,
+                        title=dict(
+                            text='AML Network Analysis - Entity Relationships',
+                            font=dict(size=16)
+                        ),
                         showlegend=False,
                         hovermode='closest',
                         margin=dict(b=20,l=5,r=5,t=40),
