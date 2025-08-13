@@ -1,0 +1,450 @@
+{
+  "name": "Chatbot",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Telegram Trigger').item.json.message.text }}",
+        "options": {
+          "systemMessage": "=kamu adalah investigator agent ppatk anti money laundry, ketika ditanya terkait dokumen jalankan tool vectore store. \n\nJika kamu dapat pertanyaan terkait database,\n\npanggil pg_tool untuk megeksekusi query ke database postgres dengan schema dibawah ini\n\nTable documentation data_aml_country:\npublic.data_aml_country (\n  \"Iso3_code\" text null,\n  \"Country\" text null,\n  \"Region\" text null,\n  \"Subregion\" text null,\n  \"Indicator\" text null,\n  \"Dimension\" text null,\n  \"Category\" text null,\n  \"Sex\" text null,\n  \"Age\" text null,\n  \"Year\" bigint null,\n  \"Unit of measurement\" text null,\n  \"VALUE\" float4 null,\n  \"Source\" text null\n) TABLESPACE pg_default;\n\nTable documentation data_aml_ml:\ntable public.data_aml_ml (\n  \"Time\" text null,\n  \"Date\" text null,\n  \"Sender_account\" bigint null,\n  \"Receiver_account\" bigint null,\n  \"Amount\" double precision null,\n  \"Payment_currency\" text null,\n  \"Received_currency\" text null,\n  \"Sender_bank_location\" text null,\n  \"Receiver_bank_location\" text null,\n  \"Payment_type\" text null,\n  \"Is_laundering\" text null,\n  \"Laundering_type\" text null,\n  \"Risk_Score\" double precision null,\n  \"Hybrid_Score\" double precision null,\n  \"Prediction\" text null,\n  \"Risk_Level\" text null,\n  \"LightGBM_Score\" text null,\n  \"RandomForest_Score\" text null,\n  \"XGBoost_Score\" double precision null,\n  \"lightgbm_Score\" text null,\n  \"randomforest_Score\" text null,\n  \"xgboost_Score\" double precision null\n) TABLESPACE pg_default;\n\n##gunakan lower like pada semua kolom bertipe data text\n\nlogic data_aml_country:\n1.Gunakan table data_aml_country untuk pertanyaan terkait kriminal internasional atau antar negara\n2.Kolom Value adalah jumlah kasus dan data diatas adalah data kriminal international\n\nlogic data_aml_ml:\n1.gunakan table data_aml_ml untuk pertanyaan terkait transaksi money laundry, seseuai table documentationnya\n\n\nJika hasil dari pg_tool memiliki row_count = 0 atau result_dict kosong, jawab \"Tidak ada data ditemukan\" dan jangan coba akses result_dict.length.\n\nSetelah memberikan jawaban ke user, akhiri respon dan jangan memanggil tool lain lagi.\n\njika ada permintaan untuk pembuatan grafik, panggil generate_a_chart tool. tapi jangan panggil pg_tools karna chart dibuat hanya dari history chat saja."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        160,
+        40
+      ],
+      "id": "4a130731-7ee2-4e9b-8428-248f8ea3c6c7",
+      "name": "AI Agent",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -80,
+        304
+      ],
+      "id": "36c6bb27-c468-493c-9244-b1d7b4329646",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "SQdQCqtr4xpemzH8",
+          "name": "Open AI Sumo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "tableName": "chat_history_n8n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        48,
+        320
+      ],
+      "id": "e0f4b7d8-bf19-4af1-acbd-fa5909fa20f8",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "RF02UHyPlOJmP5P9",
+          "name": "PG Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "=Kontrak",
+        "toolDescription": "use this tool when search about terrorist, dttot, ppspm terrorist, daftar penipu and daftar pencucian uang documents",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 200,
+        "includeDocumentMetadata": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.2,
+      "position": [
+        600,
+        320
+      ],
+      "id": "c3180669-026a-4dee-b62a-c53bda9b2b81",
+      "name": "Supabase Vector Store1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "HJdKNbmgLbiBoxnJ",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        800,
+        480
+      ],
+      "id": "d8c4a15f-8eda-427c-afb7-ff3488d0f7b3",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "SQdQCqtr4xpemzH8",
+          "name": "Open AI Sumo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "pg_tool",
+        "description": "=Use this tool to run an SQL query and fetch the result from the postgres database.\n\nThe tool expects input in the following format:\n{\n  \"query\": \"SELECT COUNT(*) FROM `transport.shipments` WHERE `On Time Delivery` = FALSE\"\n}\n\nOnly provide the SQL query as a string inside the 'query' key. Do not include code formatting (like ```sql), comments, or explanations. The tool will return only the raw result from the database.\n\n##jika ingin generate chart tidak perlu query lagi cukup dari history chat##\n",
+        "workflowId": {
+          "__rl": true,
+          "value": "tUuRxYyltlcdRT88",
+          "mode": "list",
+          "cachedResultName": "PG SQL New"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ $fromAI('query', `SQL query to run`, 'string') }}"
+          },
+          "matchingColumns": [
+            "query"
+          ],
+          "schema": [
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "id": "a578f8fe-0309-4c5d-84c9-96df1cd17f23",
+      "name": "Call Query Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "position": [
+        352,
+        320
+      ],
+      "typeVersion": 2,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "name": "generate_a_chart",
+        "description": "Call this tool whenever you need to generate a chart.\n\ngenerate chart only from previous history chat\n\nBerikan format jawaban seperti:\n\nBerikut adalah link untuk grafik: ",
+        "workflowId": "={{ $workflow.id }}",
+        "specifyInputSchema": true,
+        "schemaType": "manual",
+        "inputSchema": "{\n\"type\": \"object\",\n\"properties\": {\n\t\"query\": {\n\t\t\"type\": \"string\",\n\t\t\"description\": \"a query describing the chart to generate\"\n\t\t}\n\t}\n}"
+      },
+      "id": "c84d8e61-4f0f-4f8a-bf6a-1f35c27c3135",
+      "name": "Generate a chart",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "position": [
+        480,
+        300
+      ],
+      "typeVersion": 1.1,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "options": {
+          "timezone": "GMT"
+        }
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        32
+      ],
+      "id": "3df3798f-0120-40ea-83dd-8cf0c22245d2",
+      "name": "Date & Time"
+    },
+    {
+      "parameters": {},
+      "id": "6110dc17-b5e9-4029-ba75-46ac91d47993",
+      "name": "Execute \"Generate a chart\" tool",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        32,
+        528
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ai.sumopod.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "=Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"model\": \"gpt-4o-mini\",\n    \"messages\": [\n        {\n            \"role\": \"system\",\n            \"content\": \"Based on the user request, generate a valid Chart.js definition. Important: - Be careful with the data scale and beginatzero that all data are visible. Example if ploted data 2 and 3 on a bar chart, the baseline should be 0. - Charts colors should be different only if there are multiple datasets. - Output valid JSON. In scales, min and max are numbers. Example: `{scales:{yAxes:[{ticks:{min:0,max:3}`\"\n        },\n        {\n            \"role\": \"user\",\n            \"content\": \"{{ $json.query.query }}\"\n        }\n    ],\n    \"response_format\": {\n  \"type\": \"json_schema\",\n  \"json_schema\": {\n    \"name\": \"chart_configuration\",\n    \"description\": \"Configuration schema for Chart.js charts\",\n    \"strict\": true,\n    \"schema\": {\n  \"type\": \"object\",\n  \"properties\": {\n    \"type\": {\n      \"type\": \"string\",\n      \"enum\": [\"bar\", \"line\", \"radar\", \"pie\", \"doughnut\", \"polarArea\", \"bubble\", \"scatter\", \"area\"]\n    },\n    \"data\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"labels\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"datasets\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"label\": {\n                \"type\": [\"string\", \"null\"]\n              },\n              \"data\": {\n                \"type\": \"array\",\n                \"items\": {\n                  \"type\": \"number\"\n                }\n              },\n              \"backgroundColor\": {\n                \"type\": [\"array\", \"null\"],\n                \"items\": {\n                  \"type\": \"string\"\n                }\n              },\n              \"borderColor\": {\n                \"type\": [\"array\", \"null\"],\n                \"items\": {\n                  \"type\": \"string\"\n                }\n              },\n              \"borderWidth\": {\n                \"type\": [\"number\", \"null\"]\n              }\n            },\n            \"required\": [\"data\", \"label\", \"backgroundColor\", \"borderColor\", \"borderWidth\"],\n            \"additionalProperties\": false\n          }\n        }\n      },\n      \"required\": [\"labels\", \"datasets\"],\n      \"additionalProperties\": false\n    },\n    \"options\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"scales\": {\n          \"type\": [\"object\", \"null\"],\n          \"properties\": {\n            \"yAxes\": {\n              \"type\": \"array\",\n              \"items\": {\n                \"type\": [\"object\", \"null\"],\n                \"properties\": {\n                  \"ticks\": {\n                    \"type\": [\"object\", \"null\"],\n                    \"properties\": {\n                      \"max\": {\n                        \"type\": [\"number\", \"null\"]\n                      },\n                      \"min\": {\n                        \"type\": [\"number\", \"null\"]\n                      },\n                      \"stepSize\": {\n                        \"type\": [\"number\", \"null\"]\n                      },\n                      \"beginAtZero\": {\n                        \"type\": [\"boolean\", \"null\"]\n                      }\n                    },\n                    \"required\": [\"max\", \"min\", \"stepSize\", \"beginAtZero\"],\n                    \"additionalProperties\": false\n                  },\n                  \"stacked\": {\n                    \"type\": [\"boolean\", \"null\"]\n                  }\n                },\n                \"required\": [\"ticks\", \"stacked\"],\n                \"additionalProperties\": false\n              }},\n              \"xAxes\": {\n                \"type\": [\"object\", \"null\"],\n                \"properties\": {\n                  \"stacked\": {\n                    \"type\": [\"boolean\", \"null\"]\n                  }\n                },\n                \"required\": [\"stacked\"],\n                \"additionalProperties\": false\n              }\n          },\n          \"required\": [\"yAxes\", \"xAxes\"],\n          \"additionalProperties\": false\n        },\n        \"plugins\": {\n          \"type\": [\"object\", \"null\"],\n          \"properties\": {\n            \"title\": {\n              \"type\": [\"object\", \"null\"],\n              \"properties\": {\n                \"display\": {\n                  \"type\": [\"boolean\", \"null\"]\n                },\n                \"text\": {\n                  \"type\": [\"string\", \"null\"]\n                }\n              },\n              \"required\": [\"display\", \"text\"],\n              \"additionalProperties\": false\n            },\n            \"legend\": {\n              \"type\": [\"object\", \"null\"],\n              \"properties\": {\n                \"display\": {\n                  \"type\": [\"boolean\", \"null\"]\n                },\n                \"position\": {\n                  \"type\": [\"string\", \"null\"],\n                  \"enum\": [\"top\", \"left\", \"bottom\", \"right\", null]\n                }\n              },\n              \"required\": [\"display\", \"position\"],\n              \"additionalProperties\": false\n            }\n          },\n          \"required\": [\"title\", \"legend\"],\n          \"additionalProperties\": false\n        }\n      },\n      \"required\": [\"scales\", \"plugins\"],\n      \"additionalProperties\": false\n    }\n  },\n  \"required\": [\"type\", \"data\", \"options\"],\n  \"additionalProperties\": false\n}\n}\n}\n}",
+        "options": {}
+      },
+      "id": "84aa5f0e-0afc-48d7-858b-abee9e1f1611",
+      "name": "OpenAI - Generate Chart definition with Structured Output",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        272,
+        528
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "SQdQCqtr4xpemzH8",
+          "name": "Open AI Sumo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "37512e1a-8376-4ba0-bdcd-34bb9329ae4b",
+              "name": "response",
+              "type": "string",
+              "value": "={{ encodeURIComponent(\"https://quickchart.io/chart?width=200&c=\"+$json.choices[0].message.content) }}\n\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b2a40011-fe2f-4c3d-bbf6-0fb988142067",
+      "name": "Set response",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        560,
+        528
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        20
+      ],
+      "id": "37a8b863-bddd-43f5-8632-70a739394745",
+      "name": "Telegram Trigger",
+      "webhookId": "c939b1fc-d999-43c0-ba9a-0cf45bf64dd3",
+      "credentials": {
+        "telegramApi": {
+          "id": "JOlXkytWzi3prnLV",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        528,
+        32
+      ],
+      "id": "2078f633-521d-47a3-9180-049e26227ca3",
+      "name": "Send a text message",
+      "webhookId": "249aa80b-f903-41a7-a836-669999101590",
+      "credentials": {
+        "telegramApi": {
+          "id": "JOlXkytWzi3prnLV",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Query Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate a chart": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute \"Generate a chart\" tool": {
+      "main": [
+        [
+          {
+            "node": "OpenAI - Generate Chart definition with Structured Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI - Generate Chart definition with Structured Output": {
+      "main": [
+        [
+          {
+            "node": "Set response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Date & Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4baae359-dc3c-487d-ad6e-e6db6cf665a4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "245004f7cb11f3cab7aeb7524914ce3d3dfcd83256b5c9163e6650db92f66eef"
+  },
+  "id": "HUlhrtt9B2fzSaxo",
+  "tags": []
+}

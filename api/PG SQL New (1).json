@@ -1,0 +1,117 @@
+{
+  "name": "PG SQL New",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "query"
+            }
+          ]
+        }
+      },
+      "id": "3eb691d7-6722-446d-96d2-f732925281a4",
+      "name": "Trigger Executed by the AI Tool",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -576,
+        -48
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      query: $input.first().json.query.replace(/```sql|```/g, \"\").trim()\n    }\n  }\n];"
+      },
+      "id": "1037afd2-b0f9-4fb8-8ee9-ec50abd3da2c",
+      "name": "Sanitising the Query",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -304,
+        -48
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.query }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -48,
+        -48
+      ],
+      "id": "5fb76118-3361-49c9-887c-7f81f3739504",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "RF02UHyPlOJmP5P9",
+          "name": "PG Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let allRows = $input.all().map(item => item.json);\n\n// jika null, paksa jadi []\nif (!allRows || !Array.isArray(allRows)) {\n  allRows = [];\n}\n\n// selalu kirim row_count juga\nreturn [\n  {\n    json: {\n      result_dict: allRows,\n      row_count: allRows.length\n    }\n  }\n];\n"
+      },
+      "id": "898a90d4-f39b-49e9-a02f-eaeec8c668dd",
+      "name": "Convert Result to Dict",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        208,
+        -48
+      ],
+      "typeVersion": 2
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Trigger Executed by the AI Tool": {
+      "main": [
+        [
+          {
+            "node": "Sanitising the Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sanitising the Query": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Convert Result to Dict",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "db779302-c54e-4523-8f52-9efb50692d6e",
+  "meta": {
+    "instanceId": "245004f7cb11f3cab7aeb7524914ce3d3dfcd83256b5c9163e6650db92f66eef"
+  },
+  "id": "tUuRxYyltlcdRT88",
+  "tags": []
+}
