@@ -34,12 +34,16 @@ def main():
             "Model_Voting",]
         )
     df = load_data(DATA_PATH)
+    
+    # Reprocess the balanced dataframe
     X, y = preprocess_data(df)
+    
+    sm = SMOTE(random_state=42)
+    X, y = sm.fit_resample(X, y)
+    
     X_train, X_test, y_train, y_test = split_and_scale(X, y)
 
 
-    # sm = SMOTE(random_state=42)
-    # X_train_bal, y_train_bal = sm.fit_resample(X_train, y_train)
 
     # Train individual models
     if process_step == "Model_Training":

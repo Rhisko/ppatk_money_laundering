@@ -67,20 +67,19 @@ def split_and_scale(X, y, test_size=0.2, random_state=42):
     print(f"X_train count: {X_train.shape[0]}")
     print(f"y_train count: {y_train.shape[0]}")
     # Scaling: fit scaler di train, transform to train & test
-    scaler = StandardScaler()
-    X_train_scaled = pd.DataFrame(scaler.fit_transform(X_train), columns=X.columns)
-    X_test_scaled = pd.DataFrame(scaler.transform(X_test), columns=X.columns)
+    # scaler = StandardScaler()
+    # X_train_scaled = pd.DataFrame(scaler.fit_transform(X_train), columns=X.columns)
+    # X_test_scaled = pd.DataFrame(scaler.transform(X_test), columns=X.columns)
     
     # (Opsional) Save scaler 
 
-    joblib.dump(scaler, "trained_models/scaler.pkl")
+    # joblib.dump(scaler, "trained_models/scaler.pkl")
 
-    # (Opsional) Save preprocess result & split
-    X_train_scaled.to_csv('data/processed/X_train_scaled.csv', index=False)
-    X_test_scaled.to_csv('data/processed/X_test_scaled.csv', index=False)
+    # # (Opsional) Save preprocess result & split
+    # X_train_scaled.to_csv('data/processed/X_train_scaled.csv', index=False)
+    # X_test_scaled.to_csv('data/processed/X_test_scaled.csv', index=False)
     y_train.to_csv('data/processed/y_train.csv', index=False)
     y_test.to_csv('data/processed/y_test.csv', index=False)
 
-    print("Scaling completed. X_train_scaled & X_test_scaled are ready for model training and evaluation.")
-    return X_train_scaled, X_test_scaled, y_train, y_test
+    return X_train, X_test, y_train, y_test
 
